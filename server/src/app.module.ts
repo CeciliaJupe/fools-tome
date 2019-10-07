@@ -3,13 +3,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
-
+import {HttpModule} from '@nestjs/common';
 
 @Module({
-  imports: [TypeOrmModule.forRoot()],
+  imports: [
+    TypeOrmModule.forRoot(),
+    HttpModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
-  
+
 })
 export class AppModule {
   constructor(private readonly connection: Connection) {}
