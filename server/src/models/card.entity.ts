@@ -1,34 +1,33 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class Card {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
 
     @Column()
-    scryfallID: string
+    name: string;
 
-    @Column()
-    cardName: string;
-
-    @Column()
+    @Column({nullable: true})
     setName: string;
 
-    @Column()
+    @Column({nullable: true})
     collectorNumber: string;
 
-    @Column()
+    @Column({type: 'simple-array', nullable: true})
     colors: string[];
 
-    @Column()
+    @Column({nullable: true})
     cardType: string;
 
-    @Column()
+    @Column({nullable: true})
     qtyOwned: number;
 
-    @Column()
+    @Column({nullable: true})
     qtyNeeded: number;
 
-    @Column()
+    @Column({nullable: true})
     qtyTrade: number;
+
+
 }
