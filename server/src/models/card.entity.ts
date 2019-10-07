@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { ScryfallCard } from './scryfallCard.model';
 
 @Entity()
 export class Card {
@@ -28,6 +29,5 @@ export class Card {
 
     @Column({nullable: true})
     qtyTrade: number;
-
 
 }

@@ -3,12 +3,13 @@ import { Card } from 'src/models/card.entity';
 import { configuration } from 'src/app.config';
 import { Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
+import { ScryfallCard } from 'src/models/scryfallCard.model';
 
 @Injectable()
 export class ScryfallService {
   constructor(private readonly httpService: HttpService) {}
 
-  getCard(id: string): Observable<AxiosResponse<Card>> {
+  getCard(id: string): Observable<AxiosResponse<ScryfallCard>> {
     return this.httpService.get(configuration.scryfallUrl + '/cards/' + id);
   }
 }
