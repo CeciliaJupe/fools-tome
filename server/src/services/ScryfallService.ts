@@ -5,17 +5,16 @@ import { Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { ScryfallCard } from 'src/models/scryfallCard.model';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, getConnection } from 'typeorm';
 import * as fs from 'fs';
 
 import { chain } from 'stream-chain';
 import { parser } from 'stream-json';
 import { streamArray } from 'stream-json/streamers/StreamArray';
-import { fstat } from 'fs';
-import { streamValues } from 'stream-json/streamers/StreamValues';
-import { resolve } from 'dns';
+const Batch = require('stream-json/utils/batch');
 
 @Injectable()
+
 export class ScryfallService {
   constructor(
     @InjectRepository(Card) private readonly cardRepository: Repository<Card>,
@@ -27,26 +26,28 @@ export class ScryfallService {
   }
 
   updateCards(): void {
+    this.cardRepository.clear();
     this.getJson().then(() => {
       const pipeline = chain([
         fs.createReadStream('cardData.txt'),
         parser(),
         streamArray(),
-        data => {
-          const card = data.value;
-          // Logger.log('card: ' + JSON.stringify(card.data));
-          return card;
-        },
+        new Batch({batchSize: 100}),
       ]);
 
-      pipeline.on('data', card => {
+      pipeline.on('data', cards => {
         // Logger.log('pipeline card: ' + card);
-        const newCard = this.cardRepository.create({id: card.id, name: card.name});
-        this.cardRepository.update(newCard.id, newCard).then(reason => {
-          if (reason.affected === 0) {
-            this.cardRepository.save(newCard);
-          }
-        });
+        const cardBatch: any[] = [];
+        for (const card of cards) {
+          // Logger.log(JSON.stringify(card));
+          cardBatch.push(this.cardRepository.create({id: card.value.id, name: card.value.name}));
+        }
+        getConnection()
+          .createQueryBuilder()
+          .insert()
+          .into(Card)
+          .values(cardBatch)
+          .execute();
       });
     });
   }
