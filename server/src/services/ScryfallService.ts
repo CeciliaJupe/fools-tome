@@ -11,13 +11,18 @@ import * as fs from 'fs';
 import { chain } from 'stream-chain';
 import { parser } from 'stream-json';
 import { streamArray } from 'stream-json/streamers/StreamArray';
+import { CardSet } from 'src/models/cardSet.entity';
 const Batch = require('stream-json/utils/batch');
 
 @Injectable()
 
 export class ScryfallService {
+  private readonly SCRYFALL_BULK_DATA_URL = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
+  private readonly SCRYFALL_CARD_SETS_URL = '';
+
   constructor(
     @InjectRepository(Card) private readonly cardRepository: Repository<Card>,
+    @InjectRepository(CardSet) private readonly cardSetRepository: Repository<CardSet>,
     private readonly httpService: HttpService,
     ) {}
 
@@ -27,7 +32,7 @@ export class ScryfallService {
 
   updateCards(): void {
     this.cardRepository.clear();
-    this.getJson().then(() => {
+    this.getJson(this.SCRYFALL_BULK_DATA_URL).then(() => {
       const pipeline = chain([
         fs.createReadStream('cardData.txt'),
         parser(),
@@ -36,10 +41,8 @@ export class ScryfallService {
       ]);
 
       pipeline.on('data', cards => {
-        // Logger.log('pipeline card: ' + card);
         const cardBatch: any[] = [];
         for (const card of cards) {
-          // Logger.log(JSON.stringify(card));
           cardBatch.push(this.cardRepository.create({id: card.value.id, name: card.value.name}));
         }
         getConnection()
@@ -52,16 +55,28 @@ export class ScryfallService {
     });
   }
 
-  async getJson(): Promise<void> {
+  updateCardSets(): void {
+    this.cardSetRepository.clear();
+    const observable: Observable<AxiosResponse<CardSet[]>>
+      = this.httpService.get(this.SCRYFALL_CARD_SETS_URL);
+    observable.subscribe(axiosResponse => {
+      getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(CardSet)
+        .values(axiosResponse.data)
+        .execute();
+    });
+  }
+
+  async getJson(url: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const observable: Observable<AxiosResponse<any>>
-        = this.httpService.get('https://archive.scryfall.com/json/scryfall-default-cards.json');
+        = this.httpService.get(url);
       observable.subscribe(axiosResponse => {
-        // Logger.log(axiosResponse.data);
         fs.writeFile('cardData.txt', JSON.stringify(axiosResponse.data), error => Logger.log(error));
         resolve();
       });
     });
   }
-
 }

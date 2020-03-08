@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
+import { CardSet } from './cardSet.entity';
+import { CardCount } from './cardCount.entity';
 
 @Entity()
 export class Card {
@@ -8,8 +10,8 @@ export class Card {
     @Column()
     name: string;
 
-    @Column({nullable: true})
-    setName: string;
+    @JoinColumn()
+    setName: CardSet;
 
     @Column({nullable: true})
     collectorNumber: string;
@@ -20,13 +22,6 @@ export class Card {
     @Column({nullable: true})
     cardType: string;
 
-    @Column({nullable: true})
-    qtyOwned: number;
-
-    @Column({nullable: true})
-    qtyNeeded: number;
-
-    @Column({nullable: true})
-    qtyTrade: number;
-
+    @OneToMany(type => CardCount, cardCount => cardCount.card)
+    cardCounts: CardCount[];
 }

@@ -12,21 +12,21 @@ export class CardService {
     ) {}
 
   async getCard(id: string): Promise<Card> {
-    let card = await this.cardRepository.findOne({id});
-    if (card == null) {
-      const cardData = await this.scryfallService.getCard(id)
-        .toPromise();
-      const sfCard = cardData.data;
-      card = await this.cardRepository.create({
-        id: sfCard.id,
-        name: sfCard.name,
-        setName: sfCard.set_name,
-        collectorNumber: sfCard.collector_number,
-        colors: sfCard.colors,
-        cardType: sfCard.type_line,
-      });
-      card = await this.cardRepository.save(card);
-    }
-    return card;
+    return await this.cardRepository.findOne({id});
+    // if (card == null) {
+    //   const cardData = await this.scryfallService.getCard(id)
+    //     .toPromise();
+    //   const sfCard = cardData.data;
+    //   card = this.cardRepository.create({
+    //     id: sfCard.id,
+    //     name: sfCard.name,
+    //     setName: sfCard.set_name,
+    //     collectorNumber: sfCard.collector_number,
+    //     colors: sfCard.colors,
+    //     cardType: sfCard.type_line,
+    //   });
+    //   card = await this.cardRepository.save(card);
+    // }
+    // return card;
   }
 }

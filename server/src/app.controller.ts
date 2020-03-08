@@ -1,4 +1,4 @@
-import { Controller, Get, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ScryfallService } from './services/ScryfallService';
 import { Card } from './models/card.entity';
@@ -21,13 +21,14 @@ export class AppController {
 
   @Get('/card')
   async getCard(): Promise<string> {
-    const card = await this.cardService.getCard('7220aaa0-c457-4067-b1ff-360b161c34e5');
-    return card.name;
+    this.card = await this.cardService.getCard('7220aaa0-c457-4067-b1ff-360b161c34e5');
+    return this.card.name;
   }
 
   @Get('/update')
   updateCards(): void {
-    return this.scryfallService.updateCards();
+    this.scryfallService.updateCardSets();
+    this.scryfallService.updateCards();
   }
 
 }
