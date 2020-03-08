@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryColumn, ManyToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
-import { Card } from './card.entity';
+import { Card } from '../cards/card.entity';
 
 @Entity()
 export class CardCount {

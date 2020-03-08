@@ -1,4 +1,4 @@
-import { Card } from './card.entity';
+import { Card } from '../cards/card.entity';
 
 export class ScryfallCard {
   id: string;

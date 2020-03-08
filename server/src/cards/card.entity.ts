@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
-import { CardSet } from './cardSet.entity';
-import { CardCount } from './cardCount.entity';
+import { Entity, Column, PrimaryColumn, OneToMany, JoinColumn, OneToOne } from 'typeorm';
+import { CardSet } from '../models/cardSet.entity';
+import { CardCount } from '../models/cardCount.entity';
 
 @Entity()
 export class Card {
@@ -10,8 +10,9 @@ export class Card {
     @Column()
     name: string;
 
+    @OneToOne(type => CardSet)
     @JoinColumn()
-    setName: CardSet;
+    cardSet: CardSet;
 
     @Column({nullable: true})
     collectorNumber: string;

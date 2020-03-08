@@ -1,5 +1,5 @@
 import { Injectable, HttpService, Logger } from '@nestjs/common';
-import { Card } from 'src/models/card.entity';
+import { Card } from 'src/cards/card.entity';
 import { configuration } from 'src/app.config';
 import { Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
@@ -12,15 +12,17 @@ import { chain } from 'stream-chain';
 import { parser } from 'stream-json';
 import { streamArray } from 'stream-json/streamers/StreamArray';
 import { CardSet } from 'src/models/cardSet.entity';
+import { CardCount } from 'src/models/cardCount.entity';
 const Batch = require('stream-json/utils/batch');
 
 @Injectable()
 
 export class ScryfallService {
   private readonly SCRYFALL_BULK_DATA_URL = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
-  private readonly SCRYFALL_CARD_SETS_URL = '';
+  private readonly SCRYFALL_CARD_SETS_URL = 'https://api.scryfall.com/sets';
 
   constructor(
+    @InjectRepository(CardCount) private readonly cardCountRepository: Repository<CardCount>,
     @InjectRepository(Card) private readonly cardRepository: Repository<Card>,
     @InjectRepository(CardSet) private readonly cardSetRepository: Repository<CardSet>,
     private readonly httpService: HttpService,
@@ -31,7 +33,6 @@ export class ScryfallService {
   }
 
   updateCards(): void {
-    this.cardRepository.clear();
     this.getJson(this.SCRYFALL_BULK_DATA_URL).then(() => {
       const pipeline = chain([
         fs.createReadStream('cardData.txt'),
@@ -43,7 +44,7 @@ export class ScryfallService {
       pipeline.on('data', cards => {
         const cardBatch: any[] = [];
         for (const card of cards) {
-          cardBatch.push(this.cardRepository.create({id: card.value.id, name: card.value.name}));
+          cardBatch.push(this.cardRepository.create({ id: card.value.id, name: card.value.name }));
         }
         getConnection()
           .createQueryBuilder()
@@ -56,16 +57,20 @@ export class ScryfallService {
   }
 
   updateCardSets(): void {
-    this.cardSetRepository.clear();
-    const observable: Observable<AxiosResponse<CardSet[]>>
+    const observable: Observable<AxiosResponse<any>>
       = this.httpService.get(this.SCRYFALL_CARD_SETS_URL);
     observable.subscribe(axiosResponse => {
+      const cardSets: CardSet[] = [];
+      for (const cardSet of axiosResponse.data.data) {
+        cardSets.push(this.cardSetRepository.create({ id: cardSet.id, name: cardSet.name, setCode: cardSet.code, setType: cardSet.set_type }));
+      }
       getConnection()
         .createQueryBuilder()
         .insert()
         .into(CardSet)
-        .values(axiosResponse.data)
-        .execute();
+        .values(cardSets)
+        .execute()
+        .catch(error => Logger.log(error));
     });
   }
 
@@ -78,5 +83,18 @@ export class ScryfallService {
         resolve();
       });
     });
+  }
+
+  clearTables(): void {
+    getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(CardSet)
+      .execute();
+    getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(Card)
+      .execute();
   }
 }

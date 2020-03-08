@@ -4,11 +4,12 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { ScryfallService } from './services/ScryfallService';
-import { CardService } from './services/card.service';
-import { Card } from './models/card.entity';
+import { CardService } from './cards/card.service';
+import { Card } from './cards/card.entity';
 import { CardSet } from './models/cardSet.entity';
 import { CardCount } from './models/cardCount.entity';
 import { User } from './models/user.entity';
+import { CardController } from './cards/card.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { User } from './models/user.entity';
     TypeOrmModule.forFeature([Card, CardSet, CardCount, User]),
     HttpModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, CardController],
   providers: [
     AppService,
     CardService,

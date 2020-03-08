@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ScryfallService } from './services/ScryfallService';
-import { Card } from './models/card.entity';
-import { CardService } from './services/card.service';
+import { Card } from './cards/card.entity';
+import { CardService } from './cards/card.service';
 
 @Controller()
 export class AppController {
@@ -27,8 +27,11 @@ export class AppController {
 
   @Get('/update')
   updateCards(): void {
-    this.scryfallService.updateCardSets();
-    this.scryfallService.updateCards();
+    this.scryfallService.clearTables();
+    setTimeout(() => {
+      this.scryfallService.updateCardSets();
+      this.scryfallService.updateCards();
+    }, 1000);
   }
 
 }
