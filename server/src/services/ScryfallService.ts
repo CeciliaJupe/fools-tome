@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { ScryfallCard } from 'src/models/scryfallCard.model';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getConnection } from 'typeorm';
+import { Repository, getConnection, Not } from 'typeorm';
 import * as fs from 'fs';
 
 import { chain } from 'stream-chain';
@@ -22,8 +22,8 @@ export class ScryfallService {
   private readonly SCRYFALL_CARD_SETS_URL = 'https://api.scryfall.com/sets';
 
   constructor(
-    @InjectRepository(CardCount) private readonly cardCountRepository: Repository<CardCount>,
     @InjectRepository(Card) private readonly cardRepository: Repository<Card>,
+    @InjectRepository(CardCount) private readonly cardCountRepository: Repository<CardCount>,
     @InjectRepository(CardSet) private readonly cardSetRepository: Repository<CardSet>,
     private readonly httpService: HttpService,
     ) {}
@@ -42,17 +42,33 @@ export class ScryfallService {
       ]);
 
       pipeline.on('data', cards => {
-        const cardBatch: any[] = [];
-        for (const card of cards) {
-          cardBatch.push(this.cardRepository.create({ id: card.value.id, name: card.value.name }));
-        }
-        getConnection()
-          .createQueryBuilder()
-          .insert()
-          .into(Card)
-          .values(cardBatch)
-          .execute();
-      });
+        const cardSetLookup: any[] = [];
+        this.cardSetRepository.find()
+          .then(cardSetsRaw => {
+            for (const cardSet of cardSetsRaw) {
+              cardSetLookup.push({ cardSet, setCode: cardSet.setCode });
+            }
+          })
+          .then(() => {
+            const cardBatch: Card[] = [];
+            for (const card of cards) {
+              const cardSetCode: any = cardSetLookup
+                .find(code => code.setCode === card.value.set)
+                .cardSet;
+              const cardWithoutCode: Card = this.cardRepository.create({ id: card.value.id, name: card.value.name });
+              // Logger.log(cardSetCode);
+              cardWithoutCode.cardSet = cardSetCode.id;
+              cardBatch.push(cardWithoutCode);
+            }
+            getConnection()
+              .createQueryBuilder()
+              .insert()
+              .into(Card)
+              .values(cardBatch)
+              .execute()
+              .catch(error => Logger.log(error));
+          });
+          });
     });
   }
 

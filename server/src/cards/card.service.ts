@@ -17,7 +17,7 @@ export class CardService {
 
   getCardsByCardSet(setName: string): Promise<Card[]> {
     return this.cardRepository.createQueryBuilder('card')
-      .leftJoinAndSelect('card.cardSet', 'cardSet', 'cardSet.setCode = :setCode', {setCode: setName})
+      .innerJoinAndSelect('card.cardSet', 'cardSet', 'cardSet.setCode = :setCode', {setCode: setName})
       .getMany();
   }
 }

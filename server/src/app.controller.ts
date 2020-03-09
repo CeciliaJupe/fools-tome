@@ -30,7 +30,9 @@ export class AppController {
     this.scryfallService.clearTables();
     setTimeout(() => {
       this.scryfallService.updateCardSets();
-      this.scryfallService.updateCards();
+      setTimeout(() => {
+        this.scryfallService.updateCards();
+      }, 1000);
     }, 1000);
   }
 

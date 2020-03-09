@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn, OneToMany, JoinColumn, OneToOne } from 'typeorm';
+import { Entity, Column, PrimaryColumn, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 import { CardSet } from '../models/cardSet.entity';
 import { CardCount } from '../models/cardCount.entity';
 
@@ -10,8 +10,9 @@ export class Card {
     @Column()
     name: string;
 
-    @OneToOne(type => CardSet)
-    @JoinColumn()
+    // TODO: Should be many to many (some cards in more than one set)
+    @ManyToOne(type => CardSet)
+    @JoinColumn({ name: 'cardSet', referencedColumnName: 'id' })
     cardSet: CardSet;
 
     @Column({nullable: true})
